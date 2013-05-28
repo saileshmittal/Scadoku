@@ -13,6 +13,31 @@ show(solve(sudoku))
 
 ///////////////////////////////////
 
+def solve(ls:Array[Array[Int]]):Array[Array[Int]] = {
+    val flat = ls.flatten
+    val allIndices = Range(0,81)
+    val indices = allIndices.filter(i => flat(i) == 0)
+    val validValues = indices.map(i => {
+        getValidValuesAtIndex(i, flat)
+    })
+    val solution = allIndices.map(i => i match {
+        case i if(flat(i) != 0) => flat(i)
+        case i if(validValues(indices.indexOf(i)).size == 1) => validValues(indices.indexOf(i)).head
+        case _ => 0
+    }).toArray
+    solution match {
+        case x if(x.contains(0)) => solve(x.grouped(9).toArray.map(a => a.toArray))
+        case x => x.grouped(9).toArray.map(a => a.toArray)
+    }
+}
+
+def getValidValuesAtIndex(index:Int, ls:Array[Int]):Set[Int] = {
+    Range(1,10).toSet[Int] --
+        getRowForIndex(index, ls) --
+        getColForIndex(index, ls) --
+        getBoxForIndex(index, ls)
+}
+
 def getSudoku = Source.
     fromFile(inputFilename).
     filter(x => '0'<=x && x<='9').  // Remove white spaces and new lines
@@ -20,10 +45,6 @@ def getSudoku = Source.
     grouped(9).
     toArray.
     map(ls => ls.toArray.map(x => (x-'0').toInt))
-
-def solve(ls:Array[Array[Int]]) = {
-    ls
-}
 
 def getRowForIndex(index:Int, ls:Array[Int]):Array[Int] = {
     val start = 9*(index/9)
