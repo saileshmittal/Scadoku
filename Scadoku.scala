@@ -14,6 +14,9 @@ show(solve(sudoku))
 ///////////////////////////////////
 
 def solve(ls:IndexedSeq[IndexedSeq[Int]]):IndexedSeq[IndexedSeq[Int]] = {
+  show(sudoku)
+  println
+  readLine("Press enter to continue...")
   val flat = ls.flatten
   val allIndices = Range(0,81)
   val validValues = allIndices.map(i => i match {
@@ -33,9 +36,9 @@ def solve(ls:IndexedSeq[IndexedSeq[Int]]):IndexedSeq[IndexedSeq[Int]] = {
 
 def getValidValuesAtIndex(index:Int, ls:IndexedSeq[Int]):Set[Int] = {
   Range(1,10).toSet[Int] --
-    getRowForIndex(index, ls) --
-    getColForIndex(index, ls) --
-    getBoxForIndex(index, ls)
+    getRowIndicesForIndex(index).map(i => ls(i)) --
+    getColIndicesForIndex(index).map(i => ls(i)) --
+    getBoxIndicesForIndex(index).map(i => ls(i))
 }
 
 def getSudoku = Source.
@@ -46,23 +49,22 @@ def getSudoku = Source.
   toIndexedSeq.
   map((ls:String) => ls.toIndexedSeq.map((x:Char) => (x-'0').toInt))
 
-def getRowForIndex(index:Int, ls:IndexedSeq[Int]):IndexedSeq[Int] = {
+def getRowIndicesForIndex(index:Int):IndexedSeq[Int] = {
   val start = 9*(index/9)
-  ls.slice(start, start+9)
+  Range(0,81).slice(start, start+9)
 }
 
-def getColForIndex(index:Int, ls:IndexedSeq[Int]):IndexedSeq[Int] = {
+def getColIndicesForIndex(index:Int):IndexedSeq[Int] = {
   val mod = index%9
-  val indices = Range(0,81).filter(x => x%9 == mod)
-  indices.map(i => ls(i)).toIndexedSeq
+  Range(0,81).filter(x => x%9 == mod)
 }
 
-def getBoxForIndex(index:Int, ls:IndexedSeq[Int]):IndexedSeq[Int] = {
+def getBoxIndicesForIndex(index:Int):IndexedSeq[Int] = {
   val rowStart = 27*(index/27)
   val colStart = 3*((index%9)/3)
   val colEnd = colStart+3
   val rows = IndexedSeq(rowStart, rowStart+9, rowStart+18)
-  rows.map(i => getRowForIndex(i, ls).slice(colStart,colEnd)).flatten
+  rows.map(i => getRowIndicesForIndex(i).slice(colStart,colEnd)).flatten
 }
 
 def show(ls:IndexedSeq[IndexedSeq[Int]]) = {
