@@ -34,6 +34,7 @@ def solve(ls:IndexedSeq[IndexedSeq[Int]]):IndexedSeq[IndexedSeq[Int]] = {
     case _ => 0
   })
   solution match {
+    case x if(x == flat) => ls
     case x if(x.contains(0)) => solve(x.grouped(9).toIndexedSeq)
     case x => x.grouped(9).toIndexedSeq
   }
