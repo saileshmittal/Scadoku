@@ -7,7 +7,7 @@ println("Scadoku")
 
 val sudoku = getSudoku
 
-// show(sudoku)
+show(sudoku)
 println
 // readLine("Press enter to continue...")
 show(solve(sudoku))
@@ -15,9 +15,9 @@ show(solve(sudoku))
 ///////////////////////////////////
 
 def solve(ls:IndexedSeq[IndexedSeq[Int]]):IndexedSeq[IndexedSeq[Int]] = {
-  show(ls)
-  println
-  readLine("Press enter to continue...")
+//  show(ls)
+//  println
+//  readLine("Press enter to continue...")
   val flat = ls.flatten
   val allIndices = Range(0,81)
   val validValues = allIndices.map(i => i match {
@@ -34,7 +34,16 @@ def solve(ls:IndexedSeq[IndexedSeq[Int]]):IndexedSeq[IndexedSeq[Int]] = {
     case _ => 0
   })
   solution match {
-    case x if(x == flat) => ls
+    case x if(x == flat && validValues.forall(s => s.size == 0)) => allZeroes
+    case x if(x == flat) => {
+      val guessIndex = allIndices.find(i => validValues(i).size >= 2).get
+      val guesses = validValues(guessIndex).map(value => allIndices.map(i => i match {
+        case j if(j==guessIndex) => value
+        case j => x(j)
+      }))
+//      println("Guessing at index: " + guessIndex + ", the values : " + validValues(guessIndex))
+      guesses.map(guess => solve(guess.grouped(9).toIndexedSeq)).find(s => isSolution(s)).getOrElse(allZeroes)
+    }
     case x if(x.contains(0)) => solve(x.grouped(9).toIndexedSeq)
     case x => x.grouped(9).toIndexedSeq
   }
@@ -79,6 +88,20 @@ def getBoxIndicesForIndex(index:Int):IndexedSeq[Int] = {
   val colEnd = colStart+3
   val rows = IndexedSeq(rowStart, rowStart+9, rowStart+18)
   rows.map(i => getRowIndicesForIndex(i).slice(colStart,colEnd)).flatten
+}
+
+def allZeroes:IndexedSeq[IndexedSeq[Int]] = {
+  IndexedSeq.fill(9){IndexedSeq.fill(9)(0)}
+}
+
+def isSolution(solution:IndexedSeq[IndexedSeq[Int]]):Boolean = {
+  val flat = solution.flatten
+  val allRows = Range(0,9).map(i => getRowIndicesForIndex(i*9).map(j => flat(j)))
+  val allCols = Range(0,9).map(i => getColIndicesForIndex(i).map(j => flat(j)))
+  val allBoxes = IndexedSeq(0,3,6,27,30,33,54,57,60).map(i => getBoxIndicesForIndex(i).map(j => flat(j)))
+  val allEntities = allRows ++ allCols ++ allBoxes
+  val values = Range(1,10).toSet
+  allEntities.forall(e => e.toSet == values)
 }
 
 def show(ls:IndexedSeq[IndexedSeq[Int]]) = {
