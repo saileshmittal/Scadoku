@@ -1,4 +1,5 @@
 import scala.io.Source
+import collection.immutable._
 
 val inputFilename = "input.txt"
 
@@ -14,18 +15,22 @@ show(solve(sudoku))
 ///////////////////////////////////
 
 def solve(ls:IndexedSeq[IndexedSeq[Int]]):IndexedSeq[IndexedSeq[Int]] = {
-  show(sudoku)
+  show(ls)
   println
   readLine("Press enter to continue...")
   val flat = ls.flatten
   val allIndices = Range(0,81)
   val validValues = allIndices.map(i => i match {
     case x if (flat(x) == 0) => getValidValuesAtIndex(x, flat)
-    case _ => Set()
+    case _ => Set[Int]()
+  })
+  val reducedValidValues = allIndices.map(i => i match {
+    case x if (validValues(x).size > 1) => reduceValidValuesAtIndex(x, validValues)
+    case x => validValues(x)
   })
   val solution = allIndices.map(i => i match {
     case x if(flat(x) != 0) => flat(x)
-    case x if(validValues(x).size == 1) => validValues(x).head
+    case x if(reducedValidValues(x).size == 1) => reducedValidValues(x).head
     case _ => 0
   })
   solution match {
@@ -35,11 +40,19 @@ def solve(ls:IndexedSeq[IndexedSeq[Int]]):IndexedSeq[IndexedSeq[Int]] = {
 }
 
 def getValidValuesAtIndex(index:Int, ls:IndexedSeq[Int]):Set[Int] = {
-  Range(1,10).toSet[Int] --
-    getRowIndicesForIndex(index).map(i => ls(i)) --
-    getColIndicesForIndex(index).map(i => ls(i)) --
-    getBoxIndicesForIndex(index).map(i => ls(i))
+  Range(1,10).toSet --
+    getRowIndicesForIndex(index).map(i => ls(i)).toSet --
+    getColIndicesForIndex(index).map(i => ls(i)).toSet --
+    getBoxIndicesForIndex(index).map(i => ls(i)).toSet
 }
+
+def reduceValidValuesAtIndex(index:Int, ls:IndexedSeq[Set[Int]]):Set[Int] = {
+  List(getRowIndicesForIndex(index),getColIndicesForIndex(index),getBoxIndicesForIndex(index)).
+    map(s => (s.toSet - index).map(i => ls(i)).foldLeft(ls(index)) { (ret, s) => ret -- s}).
+    find(s => s.size == 1).getOrElse(Set[Int]())
+}
+
+
 
 def getSudoku = Source.
   fromFile(inputFilename).
